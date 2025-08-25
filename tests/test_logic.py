@@ -93,3 +93,20 @@ async def test_invalid_group_type():
         dt_from = datetime.fromisoformat("2022-01-01T00:00:00")
         dt_upto = datetime.fromisoformat("2022-01-01T23:59:59")
         await aggregate_payments(dt_from, dt_upto, "invalid_type")
+
+
+async def test_aggregation_spanning_new_year():
+    """Тест проверяет корректную генерацию меток при переходе через год."""
+    collection = logic.collection
+    await collection.insert_many([
+        {"value": 100, "dt": datetime.fromisoformat("2022-12-15T10:00:00")},
+        {"value": 200, "dt": datetime.fromisoformat("2023-01-15T10:00:00")},
+    ])
+    dt_from = datetime.fromisoformat("2022-12-01T00:00:00")
+    dt_upto = datetime.fromisoformat("2023-01-31T23:59:59")
+    result = await aggregate_payments(dt_from, dt_upto, "month")
+    assert result["dataset"] == [100, 200]
+    assert result["labels"] == [
+        "2022-12-01T00:00:00",
+        "2023-01-01T00:00:00",
+    ]

@@ -65,7 +65,7 @@ async def handle_json_message(message: Message):
         await message.reply("Произошла внутренняя ошибка. Попробуйте позже.")
 
 
-async def main():
+async def main():  # pragma: no cover
     """Основная функция для запуска бота."""
     await dp.start_polling(bot)
 
