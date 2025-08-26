@@ -4,11 +4,13 @@ from app.api import app
 
 pytestmark = pytest.mark.asyncio
 
+
 @pytest.fixture
 async def client():
     """Создает тестовый клиент для отправки запросов к приложению."""
     async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as client:
         yield client
+
 
 async def test_successful_aggregation(client: AsyncClient):
     """Тест успешного запроса к API."""
@@ -25,6 +27,7 @@ async def test_successful_aggregation(client: AsyncClient):
     assert data["dataset"] == [0, 0]
     assert len(data["labels"]) == 2
 
+
 async def test_invalid_group_type_api(client: AsyncClient):
     """Тест запроса с неверным типом группировки."""
     payload = {
@@ -36,6 +39,7 @@ async def test_invalid_group_type_api(client: AsyncClient):
     assert response.status_code == 400
     assert "Неверный тип группировки" in response.json()["detail"]
 
+
 async def test_validation_error_api(client: AsyncClient):
     """Тест на ошибку валидации Pydantic (неверный формат данных)."""
     payload = {
@@ -45,6 +49,7 @@ async def test_validation_error_api(client: AsyncClient):
     }
     response = await client.post("/aggregate", json=payload)
     assert response.status_code == 422
+
 
 async def test_internal_server_error(client: AsyncClient, mocker):
     """Тест на покрытие непредвиденной ошибки 500."""

@@ -2,7 +2,7 @@ import os
 import json
 import logging
 import httpx
-from aiogram import Bot, Dispatcher, types
+from aiogram import Bot, Dispatcher
 from aiogram.filters import CommandStart
 from aiogram.types import Message
 from dotenv import load_dotenv

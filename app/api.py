@@ -38,5 +38,5 @@ async def handle_aggregation(request: AggregationRequest):
         return result
     except ValueError as e:
         raise HTTPException(status_code=400, detail=str(e))
-    except Exception as e:
+    except Exception:
         raise HTTPException(status_code=500, detail="Внутренняя ошибка сервера.")
