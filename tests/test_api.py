@@ -12,8 +12,12 @@ async def client():
         yield client
 
 
-async def test_successful_aggregation(client: AsyncClient):
+async def test_successful_aggregation(client: AsyncClient, mocker):
     """Тест успешного запроса к API."""
+    mocker.patch(
+        'app.api.aggregate_payments',
+        return_value={"dataset": [123, 456], "labels": ["a", "b"]}
+    )
     payload = {
         "dt_from": "2022-10-01T00:00:00",
         "dt_upto": "2022-10-02T23:59:59",
@@ -21,11 +25,7 @@ async def test_successful_aggregation(client: AsyncClient):
     }
     response = await client.post("/aggregate", json=payload)
     assert response.status_code == 200
-    data = response.json()
-    assert "dataset" in data
-    assert "labels" in data
-    assert data["dataset"] == [0, 0]
-    assert len(data["labels"]) == 2
+    assert response.json() == {"dataset": [123, 456], "labels": ["a", "b"]}
 
 
 async def test_invalid_group_type_api(client: AsyncClient):

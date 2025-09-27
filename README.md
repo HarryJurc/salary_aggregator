@@ -12,6 +12,8 @@
 
 ```bash
 .
+├── .coveragerc           # Конфигурация отчета о покрытии
+├── .dockerignore         # Исключения для Docker-контекста
 ├── .env                  # Файл с переменными окружения
 ├── .gitignore            # Файл для исключения файлов из Git
 ├── app
@@ -19,66 +21,114 @@
 │   ├── api.py            # Логика FastAPI
 │   ├── bot.py            # Логика Telegram-бота
 │   ├── logic.py          # Основная логика агрегации
-│   ├── models.py         # Модели данных (Pydantic)
-│   └── db.py             # Настройки подключения к MongoDB
+├── docker-compose.yml    # Файл для оркестрации контейнеров
+├── Dockerfile            # Инструкции по сборке Docker-образа
+├── dump/                 # Папка с дампом базы данных для импорта
+│   └── sampleDB/
+│       ├── sample_collection.bson
+│       └── sample_collection.metadata.json
+├── pytest.ini            # Конфигурация Pytest
 ├── requirements.txt      # Зависимости проекта
 ├── tests
-│   ├── __init__.py
-│   └── test_logic.py     # Тесты для логики агрегации
-└── sample_data.json      # Пример данных для загрузки в MongoDB
+    ├── __init__.py
+    ├── conftest.py       # Общая конфигурация и фикстуры для тестов
+    ├── test_api.py       # Интеграционные тесты для API
+    ├── test_bot.py       # Тесты для Telegram-бота
+    └── test_logic.py     # Тесты для логики агрегации
 ```
 
-## Установка и запуск
+## Запуск через Docker (Рекомендуемый способ)
 
-### 1. Клонирование репозитория
+Этот способ является предпочтительным, так как он автоматически настраивает и запускает все компоненты проекта (API, бот, база данных) в изолированных контейнерах.
+
+### 1. Пререквизиты
+* Убедитесь, что у вас установлен и запущен Docker Desktop.
+
+### 2. Конфигурация
+Создайте в корневой папке проекта файл `.env` и добавьте в него свой токен для Telegram-бота. Остальные переменные уже настроены для Docker-сети.
+```Фрагмент кода
+TELEGRAM_BOT_TOKEN=ВАШ_ТОКЕН_TG_БОТА
+MONGO_URI=mongodb://mongo:27017/
+MONGO_DB_NAME=salary_db
+MONGO_COLLECTION_NAME=sample_collection
+```
+
+### 3. Сборка и запуск
+Откройте терминал в корневой папке проекта и выполните следующие команды:
 ```bash
+# 1. Сборка образов (может занять несколько минут в первый раз)
+docker-compose build
+
+# 2. Запуск всех сервисов в фоновом режиме
+docker-compose up -d
+```
+
+### 4. Загрузка данных в базу данных
+База данных внутри Docker-контейнера изначально пуста. Чтобы загрузить в нее тестовые данные из папки `dump`, выполните команду:
+```bash
+mongorestore --uri="mongodb://localhost:27017" --db=salary_db dump/sampleDB
+```
+
+### 5. Управление проектом
+* Посмотреть логи всех сервисов:
+```bash
+docker-compose logs -f
+```
+* Остановить и удалить контейнеры (данные в БД сохранятся):
+```bash
+docker-compose down
+```
+
+## Локальный запуск (альтернативный способ)
+Этот способ требует ручной установки зависимостей и предназначен для разработки и отладки.
+### 1. Установка и настройка
+```bash
+# Клонирование репозитория
 git clone https://github.com/HarryJurc/salary_aggregator.git
 cd salary_aggregator
-```
 
-### 2. Создание и активация виртуального окружения
-```bash
+# Создание и активация виртуального окружения
 python -m venv venv
-source venv/bin/activate  # Linux/macOS
-venv\Scripts\activate     # Windows
-```
+# Для Windows: venv\Scripts\activate
+# Для macOS/Linux: source venv/bin/activate
 
-### 3. Установка зависимостей
-```bash
+# Установка зависимостей
 pip install -r requirements.txt
 ```
 
-### 4. Настройка переменных окружения
-Создайте файл ```.env``` в корне проекта и добавьте следующие переменные:
+### 2. Конфигурация для локального запуска
+* **Создайте файл** `.env` по шаблону из Docker-раздела.
+* **Важно!** Измените `MONGO_URI` для подключения к локальной базе данных:
 ```bash
-MONGO_URI=mongodb://localhost:27017/
-MONGO_DB_NAME=salary_db
-MONGO_COLLECTION_NAME=salaries
-TELEGRAM_BOT_TOKEN=YOUR_TELEGRAM_BOT_TOKEN
+- MONGO_URI=mongodb://mongo:27017/
++ MONGO_URI=mongodb://localhost:27017/
+```
+* **Важно!** В файле `app/bot.py` измените `API_URL` для подключения к локальному API:
+```bash
+# app/bot.py
+- API_URL = "http://api:8000/aggregate"
++ API_URL = "http://127.0.0.1:8000/aggregate"
 ```
 
-### 5. Загрузка тестовых данных в MongoDB
-Вы можете использовать файл ```sample_data.json``` для загрузки начальных данных в вашу MongoDB.
+### 3. Загрузка данных в локальную MongoDB
+Убедитесь, что у вас запущен локальный сервер MongoDB и установлены `mongo-tools`.
 ```bash
-mongoimport --uri "mongodb://localhost:27017/salary_db" --collection salaries --file sample_data.json --jsonArray
+mongorestore --uri="mongodb://localhost:27017" --db=salary_db dump/sampleDB
 ```
 
-Примечание: Убедитесь, что у вас установлен ```mongo-tools```.
-
-### 6. Запуск FastAPI приложения
+### 4. Запуск сервисов
+Запустите API и бота в двух разных терминалах.
+* Терминал 1 (API):
 ```bash
 uvicorn app.api:app --reload
 ```
-
-API будет доступно по адресу ```http://127.0.0.1:8000```.
-Документация Swagger UI будет доступна по адресу ```http://127.0.0.1:8000/docs```.
-
-### 7. Запуск Telegram-бота
+* Терминал 2 (Бот):
 ```bash
 python app/bot.py
 ```
 
-### 8. Запуск тестов
+## Тестирование
+Для запуска полного набора тестов и получения отчета о покрытии выполните команду:
 ```bash
-pytest
+pytest --cov=app
 ```

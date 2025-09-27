@@ -2,6 +2,8 @@ import pytest
 import pytest_asyncio
 from datetime import datetime
 
+from motor.motor_asyncio import AsyncIOMotorClient
+
 from app import logic
 from app.logic import aggregate_payments
 
@@ -12,10 +14,10 @@ pytestmark = pytest.mark.asyncio
 async def setup_database(monkeypatch):
     """
     Эта фикстура выполняется перед КАЖДЫМ тестом. Она создает новое,
-    полностью изолированное подключение к БД для каждого теста,
+    полностью изолированное подключение к локальной БД для каждого теста,
     чтобы избежать конфликтов асинхронных циклов.
     """
-    test_client = logic.AsyncIOMotorClient(logic.MONGO_URI)
+    test_client = AsyncIOMotorClient("mongodb://localhost:27017/")
     test_db = test_client[logic.MONGO_DB_NAME]
     test_collection = test_db[logic.MONGO_COLLECTION_NAME]
 
