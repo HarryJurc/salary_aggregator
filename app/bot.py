@@ -15,7 +15,7 @@ BOT_TOKEN = os.getenv("TELEGRAM_BOT_TOKEN")
 if not BOT_TOKEN:
     raise ValueError("Необходимо установить переменную окружения TELEGRAM_BOT_TOKEN.")
 
-API_URL = "http://127.0.0.1:8000/aggregate"
+API_URL = "http://api:8000/aggregate"
 
 bot = Bot(token=BOT_TOKEN)
 dp = Dispatcher()
