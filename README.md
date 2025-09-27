@@ -58,9 +58,9 @@ TELEGRAM_BOT_TOKEN=YOUR_TELEGRAM_BOT_TOKEN
 ```
 
 ### 5. Загрузка тестовых данных в MongoDB
-Вы можете использовать файл ```sample_data.json``` для загрузки начальных данных в вашу MongoDB.
+Вы можете использовать файл ```sample_collection.metadata.json``` для загрузки начальных данных в вашу MongoDB.
 ```bash
-mongoimport --uri "mongodb://localhost:27017/salary_db" --collection salaries --file sample_data.json --jsonArray
+mongoimport --uri "mongodb://localhost:27017/salary_db" --collection salaries --sample_collection.metadata.json --jsonArray
 ```
 
 Примечание: Убедитесь, что у вас установлен ```mongo-tools```.
