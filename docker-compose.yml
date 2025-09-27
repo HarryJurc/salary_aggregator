@@ -1,0 +1,37 @@
+version: '3.8'
+
+services:
+  mongo:
+    image: mongo:latest
+    container_name: salary_mongo
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongo_data:/data/db
+
+  api:
+    build: .
+    container_name: salary_api
+    command: uvicorn app.api:app --host 0.0.0.0 --port 8000
+    volumes:
+      - .:/app
+    ports:
+      - "8000:8000"
+    env_file:
+      - .env
+    depends_on:
+      - mongo
+
+  bot:
+    build: .
+    container_name: salary_bot
+    command: python app/bot.py
+    volumes:
+      - .:/app
+    env_file:
+      - .env
+    depends_on:
+      - api
+
+volumes:
+  mongo_data:
